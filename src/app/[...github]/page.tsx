@@ -19,8 +19,11 @@ export default function PRReviewPage({ params }: { params: Promise<{ github: str
     const [diffViewMode, setDiffViewMode] = useState<"inline" | "split">("inline");
 
     useEffect(() => {
+        const cacheKey = `assess_review_${owner}_${repo}_${number}`;
+
         async function fetchReview() {
             try {
+                setIsLoading(true);
                 const res = await fetch("/api/review", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -31,6 +34,7 @@ export default function PRReviewPage({ params }: { params: Promise<{ github: str
                 if (!res.ok) throw new Error(data.error || "Failed to fetch review");
 
                 setAiData(data);
+                localStorage.setItem(cacheKey, JSON.stringify(data));
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -38,7 +42,17 @@ export default function PRReviewPage({ params }: { params: Promise<{ github: str
             }
         }
 
-        fetchReview();
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+            try {
+                setAiData(JSON.parse(cachedData));
+                setIsLoading(false);
+            } catch (e) {
+                fetchReview();
+            }
+        } else {
+            fetchReview();
+        }
     }, [owner, repo, number]);
 
     return (
@@ -62,7 +76,7 @@ export default function PRReviewPage({ params }: { params: Promise<{ github: str
                     <a href={`https://github.com/${owner}/${repo}/pull/${number}`} target="_blank" rel="noreferrer" className="px-4 py-2 bg-white/5 hover:bg-white/10 text-sm font-medium rounded-lg transition-colors border border-white/10 hidden sm:block">
                         View on GitHub
                     </a>
-                    <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-sm font-medium rounded-lg transition-colors shadow-lg shadow-blue-500/20">
+                    <button onClick={() => { localStorage.removeItem(`assess_review_${owner}_${repo}_${number}`); window.location.reload(); }} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-sm font-medium rounded-lg transition-colors shadow-lg shadow-blue-500/20">
                         Re-run Review
                     </button>
                 </div>
