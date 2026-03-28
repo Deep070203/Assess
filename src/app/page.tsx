@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, Activity, Clock, FileCode2, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [prUrl, setPrUrl] = useState("");
   const [isHovering, setIsHovering] = useState(false);
 
@@ -49,9 +51,16 @@ export default function Home() {
           <Activity className="text-blue-500 w-6 h-6" />
           <span className="text-xl font-semibold tracking-tight">Assess<span className="text-blue-500">.ai</span></span>
         </div>
-        <div className="flex gap-4 text-sm font-medium text-slate-400">
+        <div className="flex gap-4 items-center text-sm font-medium text-slate-400">
           <a href="#" className="hover:text-white transition-colors">Documentation</a>
-          <a href="/settings" className="hover:text-white transition-colors">Settings</a>
+          {session ? (
+            <div className="flex items-center gap-3 ml-2">
+              <a href="/dashboard" className="hover:text-white transition-colors">Dashboard</a>
+              <img src={session.user?.image || ""} className="w-8 h-8 rounded-full border border-white/10" alt="Avatar" />
+            </div>
+          ) : (
+            <button onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="hover:text-white transition-colors">Sign In</button>
+          )}
         </div>
       </nav>
 
@@ -79,36 +88,25 @@ export default function Home() {
           </p>
         </motion.div>
 
-        {/* Search Bar */}
+        {/* Auth CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-          className="w-full max-w-2xl relative"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 w-full max-w-lg mb-12 relative z-20"
         >
-          <form onSubmit={handleSubmit} className="relative group">
-            <div className={`absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 ${isHovering ? 'opacity-50 duration-200' : ''}`}></div>
-            <div className="relative flex items-center bg-[#0f1115] border border-white/10 rounded-2xl overflow-hidden focus-within:border-blue-500/50 transition-colors">
-              <div className="pl-6 pr-2 py-4 text-slate-400">
-                <Search className="w-6 h-6" />
-              </div>
-              <input
-                type="text"
-                value={prUrl}
-                onChange={(e) => setPrUrl(e.target.value)}
-                onFocus={() => setIsHovering(true)}
-                onBlur={() => setIsHovering(false)}
-                placeholder="https://github.com/owner/repo/pull/123"
-                className="w-full bg-transparent border-none text-white text-lg placeholder-slate-600 focus:outline-none py-5"
-              />
-              <button
-                type="submit"
-                className="mx-3 px-6 py-3 bg-white text-black font-medium rounded-xl hover:bg-slate-200 transition-colors flex items-center gap-2"
-              >
-                Assess <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </form>
+          {status === "loading" ? (
+            <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          ) : session ? (
+            <button onClick={() => router.push("/dashboard")} className="px-8 py-4 bg-white text-black font-semibold rounded-2xl hover:bg-slate-200 transition-colors flex items-center gap-3 text-lg w-full sm:w-auto shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)]">
+              Go to Dashboard <ArrowRight className="w-5 h-5" />
+            </button>
+          ) : (
+            <button onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="px-8 py-4 bg-white text-black font-semibold rounded-2xl hover:bg-slate-200 transition-colors flex items-center gap-3 text-lg w-full sm:w-auto shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)]">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="w-6 h-6 fill-current"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"></path></svg>
+              Login with GitHub
+            </button>
+          )}
         </motion.div>
 
         {/* Recent Reviews grid */}
