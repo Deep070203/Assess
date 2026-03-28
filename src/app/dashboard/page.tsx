@@ -75,32 +75,41 @@ export default async function Dashboard() {
                             <p className="text-sm mt-1">Make sure you have authorized access to your repositories.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {prs.map((pr: any) => {
                                 const { owner, repo } = getRepoParams(pr.repository_url);
                                 const isOpen = pr.state === "open";
 
                                 return (
                                     <Link key={pr.id} href={`/${owner}/${repo}/pull/${pr.number}`}
-                                        className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-blue-500/30 transition-all group"
+                                        className="flex flex-col justify-between p-6 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-blue-500/30 hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] transition-all group h-full relative overflow-hidden"
                                     >
-                                        <div className="flex items-start gap-4">
-                                            <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.4)] ${isOpen ? 'bg-green-500 shadow-green-500' : 'bg-purple-500 shadow-purple-500'}`}></div>
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex justify-center items-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-300 group-hover:bg-blue-500/10 group-hover:text-blue-400 group-hover:border-blue-500/20 transition-colors">
+                                                    <GitPullRequest className="w-5 h-5" />
+                                                </div>
+                                                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.4)] ${isOpen ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-purple-500 shadow-purple-500/50'}`}></div>
+                                            </div>
                                             <div>
-                                                <h3 className="font-medium text-slate-200 group-hover:text-blue-300 transition-colors">{pr.title}</h3>
-                                                <div className="flex items-center gap-2 mt-2 text-xs text-slate-500 font-mono">
-                                                    <span className="text-slate-400">{owner}/{repo}</span>
-                                                    <span>•</span>
-                                                    <span>#{pr.number}</span>
-                                                    <span>•</span>
-                                                    <span>{new Date(pr.updated_at).toLocaleDateString()}</span>
+                                                <h3 className="font-semibold text-slate-200 group-hover:text-blue-300 transition-colors text-lg leading-tight line-clamp-2">{pr.title}</h3>
+                                                <div className="flex flex-col gap-1.5 mt-3 text-sm text-slate-500 font-mono">
+                                                    <span className="text-blue-400/80 font-medium px-2 py-1 bg-blue-500/10 rounded-md w-fit">
+                                                        {owner}/{repo}
+                                                    </span>
+                                                    <span className="opacity-70 pl-1 mt-1">PR #{pr.number}</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-4 text-sm font-medium">
-                                            <span className="flex items-center gap-1.5 text-blue-400 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Rocket className="w-4 h-4" /> Review
+                                        <div className="flex items-center justify-between mt-5 pt-5 border-t border-white/5">
+                                            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                {new Date(pr.updated_at).toLocaleDateString()}
+                                            </div>
+                                            <span className="flex items-center gap-1.5 text-blue-400 font-semibold text-sm group-hover:translate-x-1 transition-transform">
+                                                Assess <Rocket className="w-4 h-4" />
                                             </span>
                                         </div>
                                     </Link>
