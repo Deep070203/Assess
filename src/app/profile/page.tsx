@@ -1,9 +1,9 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { DashboardClient } from "./DashboardClient";
+import { ProfileClient } from "./ProfileClient";
 
-export default async function Dashboard() {
+export default async function ProfilePage() {
     const session = await getServerSession(authOptions);
 
     if (!session || !(session as any).accessToken) {
@@ -12,23 +12,22 @@ export default async function Dashboard() {
 
     const token = (session as any).accessToken;
 
-    let prs = [];
+    let repos = [];
     try {
-        const prsRes = await fetch("https://api.github.com/search/issues?q=is:pr+author:@me&sort=updated", {
+        const res = await fetch("https://api.github.com/user/repos?per_page=100&sort=updated", {
             headers: {
                 Authorization: `Bearer ${token}`,
                 Accept: "application/vnd.github.v3+json"
             },
-            next: { revalidate: 60 } // Cache for 1 min
+            next: { revalidate: 60 } // Cache for 1 minute
         });
 
-        if (prsRes.ok) {
-            const prsData = await prsRes.json();
-            prs = prsData.items || [];
+        if (res.ok) {
+            repos = await res.json();
         }
     } catch (err) {
-        console.error("Failed to fetch PRs:", err);
+        console.error("Failed to fetch repos", err);
     }
 
-    return <DashboardClient initialPrs={prs} token={token} user={session.user} />;
+    return <ProfileClient user={session.user} repositories={repos} />;
 }
