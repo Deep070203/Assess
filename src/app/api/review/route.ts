@@ -1,11 +1,27 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/db";
 
 export async function POST(request: Request) {
     try {
-        const { owner, repo, pullNumber } = await request.json();
+        const { owner, repo, pullNumber, forceReRun } = await request.json();
 
         if (!owner || !repo || !pullNumber) {
             return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+        }
+
+        const cacheKey = `assess_review_${owner}_${repo}_${pullNumber}`;
+
+        if (!forceReRun) {
+            const cached = await prisma.assessmentCache.findUnique({
+                where: { cacheKey }
+            });
+            if (cached) {
+                return NextResponse.json({
+                    summary: cached.summary,
+                    feedback: cached.feedback,
+                    diff: cached.diff
+                });
+            }
         }
 
         // Fetch the raw PR diff from GitHub
@@ -81,6 +97,23 @@ export async function POST(request: Request) {
             console.error("JSON Parsing Error on:", jsonText);
             aiReview = { summary: "AI failed to format the response natively.", feedback: [] };
         }
+
+        // Save to DB
+        await prisma.assessmentCache.upsert({
+            where: { cacheKey },
+            update: {
+                summary: aiReview.summary,
+                feedback: aiReview.feedback,
+                diff: diffText
+            },
+            create: {
+                cacheKey,
+                summary: aiReview.summary,
+                feedback: aiReview.feedback,
+                diff: diffText
+            }
+        });
+
         return NextResponse.json({
             ...aiReview,
             diff: diffText

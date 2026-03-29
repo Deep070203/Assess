@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { DashboardClient } from "./DashboardClient";
+import prisma from "@/lib/db";
 
 export default async function Dashboard() {
     const session = await getServerSession(authOptions);
@@ -30,5 +31,16 @@ export default async function Dashboard() {
         console.error("Failed to fetch PRs:", err);
     }
 
-    return <DashboardClient initialPrs={prs} token={token} user={session.user} />;
+    let dbSavedRepos: string[] = [];
+    if (session.user?.email) {
+        const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            include: { configuredRepos: true }
+        });
+        if (dbUser) {
+            dbSavedRepos = dbUser.configuredRepos.map((r: any) => r.fullName);
+        }
+    }
+
+    return <DashboardClient initialPrs={prs} token={token} user={session.user} dbSavedRepos={dbSavedRepos} />;
 }

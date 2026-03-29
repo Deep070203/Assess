@@ -1,7 +1,12 @@
 import { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import prisma from "@/lib/db";
+
 export const authOptions: NextAuthOptions = {
+    adapter: PrismaAdapter(prisma),
+    session: { strategy: "jwt" },
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
         GithubProvider({
@@ -22,7 +27,9 @@ export const authOptions: NextAuthOptions = {
             return token;
         },
         async session({ session, token }) {
-            (session as any).accessToken = token.accessToken;
+            if (token) {
+                (session as any).accessToken = token.accessToken;
+            }
             return session;
         }
     },

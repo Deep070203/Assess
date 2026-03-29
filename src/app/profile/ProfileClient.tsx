@@ -5,34 +5,33 @@ import Link from "next/link";
 import { ArrowLeft, Save, Filter, Search, CheckSquare, Square, ShieldCheck, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export function ProfileClient({ user, repositories }: { user: any, repositories: any[] }) {
+export function ProfileClient({ user, repositories, dbSavedRepos }: { user: any, repositories: any[], dbSavedRepos: string[] }) {
     const router = useRouter();
     const [search, setSearch] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
     const allRepoNames = repositories.map(r => r.full_name);
-    const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
+    const [selectedRepos, setSelectedRepos] = useState<string[]>(dbSavedRepos || []);
 
     useEffect(() => {
-        const stored = localStorage.getItem("assess_config_repos");
-        if (stored) {
-            try {
-                setSelectedRepos(JSON.parse(stored));
-            } catch (e) { }
-        } else {
-            // Default to all
-            setSelectedRepos(allRepoNames);
+        if (dbSavedRepos) {
+            setSelectedRepos(dbSavedRepos);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [dbSavedRepos]);
 
     const handleSave = () => {
         setIsSaving(true);
-        setTimeout(() => {
-            localStorage.setItem("assess_config_repos", JSON.stringify(selectedRepos));
-            localStorage.setItem("assess_config_all_repos", (selectedRepos.length === allRepoNames.length).toString());
+        fetch('/api/profile/repos', {
+            method: 'POST',
+            body: JSON.stringify({ repos: selectedRepos }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(() => {
             router.push("/dashboard");
-        }, 500); // Small delay for UX button feedback
+        }).catch(err => {
+            console.error(err);
+            setIsSaving(false);
+        });
     }
 
     const toggleRepo = (fullName: string) => {
