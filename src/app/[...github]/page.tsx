@@ -18,41 +18,29 @@ export default function PRReviewPage({ params }: { params: Promise<{ github: str
     const [aiData, setAiData] = useState<any>(null);
     const [diffViewMode, setDiffViewMode] = useState<"inline" | "split">("inline");
 
+    async function fetchReview(forceReRun = false) {
+        try {
+            setIsLoading(true);
+            const res = await fetch("/api/review", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ owner, repo, pullNumber: number, forceReRun })
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || "Failed to fetch review");
+
+            setAiData(data);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     useEffect(() => {
-        const cacheKey = `assess_review_${owner}_${repo}_${number}`;
-
-        async function fetchReview() {
-            try {
-                setIsLoading(true);
-                const res = await fetch("/api/review", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ owner, repo, pullNumber: number })
-                });
-                const data = await res.json();
-
-                if (!res.ok) throw new Error(data.error || "Failed to fetch review");
-
-                setAiData(data);
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        }
-
-        const cachedData = localStorage.getItem(cacheKey);
-        if (cachedData) {
-            try {
-                setAiData(JSON.parse(cachedData));
-                setIsLoading(false);
-            } catch (e) {
-                fetchReview();
-            }
-        } else {
-            fetchReview();
-        }
+        fetchReview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [owner, repo, number]);
 
     return (
@@ -76,8 +64,8 @@ export default function PRReviewPage({ params }: { params: Promise<{ github: str
                     <a href={`https://github.com/${owner}/${repo}/pull/${number}`} target="_blank" rel="noreferrer" className="px-4 py-2 bg-white/5 hover:bg-white/10 text-sm font-medium rounded-lg transition-colors border border-white/10 hidden sm:block">
                         View on GitHub
                     </a>
-                    <button onClick={() => { localStorage.removeItem(`assess_review_${owner}_${repo}_${number}`); window.location.reload(); }} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-sm font-medium rounded-lg transition-colors shadow-lg shadow-blue-500/20">
-                        Re-run Review
+                    <button onClick={() => fetchReview(true)} disabled={isLoading} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-sm font-medium rounded-lg transition-colors shadow-lg shadow-blue-500/20 w-36 whitespace-nowrap">
+                        {isLoading ? "Analyzing..." : "Re-run Review"}
                     </button>
                 </div>
             </nav>

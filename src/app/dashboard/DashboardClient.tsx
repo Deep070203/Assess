@@ -4,27 +4,24 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { GitPullRequest, Search, Clock, Rocket, Filter } from "lucide-react";
 
-export function DashboardClient({ initialPrs, token, user }: { initialPrs: any[], token: string, user: any }) {
+export function DashboardClient({ initialPrs, token, user, dbSavedRepos }: { initialPrs: any[], token: string, user: any, dbSavedRepos: string[] }) {
     const [activeTab, setActiveTab] = useState<"global" | "repo">("global");
 
-    // Config states loaded from localStorage
+    // Config states loaded from API/DB
     const [selectedRepo, setSelectedRepo] = useState<string>("");
-    const [allowedRepos, setAllowedRepos] = useState<string[]>([]);
+    const [allowedRepos, setAllowedRepos] = useState<string[]>(dbSavedRepos || []);
 
     // Tab 2 Fetching states
     const [repoPrs, setRepoPrs] = useState<any[]>([]);
     const [isLoadingRepoPrs, setIsLoadingRepoPrs] = useState(false);
 
     useEffect(() => {
-        const stringified = localStorage.getItem("assess_config_repos");
-        if (stringified) {
-            try {
-                const parsed = JSON.parse(stringified);
-                setAllowedRepos(parsed);
-                if (parsed.length > 0) setSelectedRepo(parsed[0]);
-            } catch (e) { }
+        if (dbSavedRepos && dbSavedRepos.length > 0) {
+            setAllowedRepos(dbSavedRepos);
+            if (!selectedRepo) setSelectedRepo(dbSavedRepos[0]);
         }
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dbSavedRepos]);
 
     useEffect(() => {
         if (activeTab === "repo" && selectedRepo) {
