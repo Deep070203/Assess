@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Search, Activity, Clock, FileCode2, ArrowRight } from "lucide-react";
 
@@ -55,8 +56,10 @@ export default function Home() {
           <a href="#" className="hover:text-white transition-colors">Documentation</a>
           {session ? (
             <div className="flex items-center gap-3 ml-2">
-              <a href="/dashboard" className="hover:text-white transition-colors">Dashboard</a>
-              <img src={session.user?.image || ""} className="w-8 h-8 rounded-full border border-white/10" alt="Avatar" />
+              <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+              <Link href="/profile" className="hover:opacity-80 transition-opacity">
+                <img src={session.user?.image || ""} className="w-8 h-8 rounded-full border border-white/10" alt="Avatar" />
+              </Link>
             </div>
           ) : (
             <button onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="hover:text-white transition-colors">Sign In</button>
