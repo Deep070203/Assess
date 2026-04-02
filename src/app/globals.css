@@ -1,12 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0c10;
-  --foreground: #f8fafc;
-  --accent: #3b82f6;
-  --accent-glow: rgba(59, 130, 246, 0.15);
-  --glass: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --background: #f0fdf4;
+  /* emerald-50 */
+  --foreground: #022c22;
+  /* emerald-950 */
+  --accent: #10b981;
+  /* emerald-500 */
+  --accent-glow: rgba(16, 185, 129, 0.15);
+  --glass: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(16, 185, 129, 0.2);
 }
 
 @theme inline {
@@ -29,14 +32,14 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 24px rgba(249, 115, 22, 0.05);
   transition: all 0.3s ease;
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(249, 115, 22, 0.3);
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .hero-gradient {
@@ -48,4 +51,23 @@ body {
   height: 50vh;
   z-index: -1;
   pointer-events: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(16, 185, 129, 0.05);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.2);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.4);
 }
